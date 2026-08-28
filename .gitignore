@@ -1,0 +1,10 @@
+# 자료는 저장소에 넣지 않는다 (용량·배포 제한)
+*.nc
+*.pkl
+*.csv
+*.png
+*.pdf
+*.hwpx
+__pycache__/
+*.pyc
+.DS_Store

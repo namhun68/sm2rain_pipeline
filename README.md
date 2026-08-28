@@ -71,7 +71,7 @@ run.py               단계 실행기
 |---|---|
 | `01_preprocess/era5_KST.py` | ERA5-Land 시간별 누계 해제 후 KST 일합산 |
 | `01_preprocess/gpm_KST.py` | GPM 30분 자료 KST 일합산 및 재격자화 |
-| `01_preprocess/IF_KST.py` | ASCAT 일 stack 결측 보간 |
+| `01_preprocess/IF_KST.py` | ASCAT 일 stack |
 | `01_preprocess/ASOS_AWS_preprocessing.py` | 지상관측 정리 |
 | `02_sm2rain/SM2RAIN.py` | 토양수분 역산 강수 (채택) |
 | `02_sm2rain/ASCAT_SM2RAIN_GA_KST.py` | 5-파라미터 변형 (검토 결과 미채택) |

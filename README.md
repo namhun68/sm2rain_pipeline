@@ -47,6 +47,7 @@
 | SM2RAIN | 토양수분 역산 강수 |
 | 티센 | 지점 면적비 가중 유역평균. 기존 방식과의 비교군 |
 | BC-LR | 픽셀별 선형회귀 편향보정. 기계학습 이전 방식과의 비교군 |
+| LR-THI | 목표자료를 티센으로 둔 격자별 선형회귀. 목표자료 선택의 영향을 보는 비교군 |
 
 ---
 
@@ -60,8 +61,8 @@
 05_export/           export_bcg_grid · export_basin_csv · export_thiessen_basin
                      export_BC_LR_csv
 analysis/            basin_eval_core · national_eval · thiessen_basin
-                     basin_freq · gauge_coverage
-figures/             report
+                     lr_thiessen · basin_freq · gauge_coverage
+figures/             report · report_lr
 
 paths.py             자료 경로 정의와 존재 확인
 run.py               단계 실행기
@@ -85,7 +86,9 @@ run.py               단계 실행기
 | `analysis/basin_eval_core.py` | 유역 추출·면적가중 평균·평가지표 |
 | `analysis/national_eval.py` | 전국 표준유역 성능 평가 |
 | `analysis/thiessen_basin.py` | 티센 가중치 산정 |
+| `analysis/lr_thiessen.py` | 목표자료를 티센으로 둔 격자별 선형회귀와 전국 평가 |
 | `figures/report.py` | 결과 그림 |
+| `figures/report_lr.py` | 목표자료 검토 그림 |
 
 ---
 

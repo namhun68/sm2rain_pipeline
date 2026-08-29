@@ -47,7 +47,8 @@ STAGES: dict[str, tuple[str, list[str]]] = {
          '05_export/export_thiessen_basin.py']),
     'analysis': (
         '전국 표준유역 단위로 평가한다 (표 · 지표)',
-        ['analysis/national_eval.py']),
+        ['analysis/national_eval.py',
+         'analysis/lr_thiessen.py']),
     'figures': (
         '보고서 그림을 만든다',
         ['figures/report.py']),

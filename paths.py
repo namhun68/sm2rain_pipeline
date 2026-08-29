@@ -89,6 +89,10 @@ NEEDS: dict[str, list[tuple[Path, str, bool]]] = {
         (DATA / 'national_eval_cache.pkl', '전국 평가 캐시', False),
         (DATA / 'thiessen_aws.pkl', '티센 가중치·시계열 (3개 유역)', False),
         (THIES / 'THIESSEN_basin_daily.nc', '티센 유역 일강수 (전국 848)', False),
+        (PRECIP / 'BC12_fields_2021fit.nc', 'BC · BC-G 격자장', True),
+        (PRECIP / 'BC_LR_AWS_KST.nc', 'SM2RAIN·GPM·ERA5·TCA 격자', True),
+        (DATA / 'basin_cell_weights.pkl', '유역×격자 교차면적 (없으면 만든다)', False),
+        (DATA / 'LR_THI_grid.nc', '티센 목표 회귀 격자장 (출력)', False),
     ],
     'figures': [
         (DATA / 'basin_eval_cache.pkl', '유역 캐시 (map·series·sums)', True),
@@ -97,6 +101,7 @@ NEEDS: dict[str, list[tuple[Path, str, bool]]] = {
         (PRECIP / 'BC12_fields_2021fit.nc', 'BC · BC-G 격자 (grid·graph)', False),
         (PJ / 'result/ASCAT/precipitation/BC_LR_AWS_KST.nc',
          'IDW_AWS · GPM 격자 (grid·graph)', False),
+        (DATA / 'LR_THI_grid.nc', '티센 목표 회귀 격자장 (report_lr)', False),
     ],
 }
 

@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""보고서 그림 — 티센 목표 재적합 검토.
+"""보고서 그림 — 최종 산출물 LR-G 의 전국 검증.
 
-report.py 가 본문 그림을 만든다면, 이 파일은 편향보정의 목표자료를 티센으로
-바꾼 판(analysis/lr_thiessen.py)을 전국 규모로 견주는 그림을 만든다.
-기준은 티센 유역 일강수이고 평가기간은 2022-01-01 ~ 2025-05-01 이다.
+report.py 가 본문 그림을 만든다면, 이 파일은 최종 산출물 LR-G
+(analysis/lr_thiessen.py)를 지상관측 보간 격자장 IDW_AWS · LightGBM 편향보정
+BC-G 와 전국 규모로 견주는 그림을 만든다.  기준은 티센 유역 일강수이고
+평가기간은 2022-01-01 ~ 2025-05-01 이다.
 
-    R1   전국유역_KGE지도            산출물 5종 KGE
+    R1   전국유역_KGE지도            산출물 3종 KGE
     R2   전국유역_누적비지도          산출/티센 누적비
     R3   전국유역_연최대일재현비지도    연 최대일 재현비
     R4   유역분포                   KGE·R·누적비·연최대일 상자그림
@@ -25,7 +26,7 @@ report.py 가 본문 그림을 만든다면, 이 파일은 편향보정의 목�
 글씨·해상도가 보고서 규격으로 올라간다.  None 이면 화면에만 띄운다.
 
 앞서 analysis/lr_thiessen.py 를 돌려 격자장을 만들어 두어야 한다.
-    KIHS/DATA/LR_THI_grid.nc
+    KIHS/DATA/LRG_THI_grid.nc
 
 ────────────────────────────────────────────────────────────────────────────
 지켜야 할 규약
@@ -58,14 +59,11 @@ TAB = '/Users/kim/Desktop/work/KIHS/DATA'
 SAVE = None              # 저장할 폴더.  None 이면 띄우기만 한다
 #   예: SAVE = '/Users/kim/Desktop/work/KIHS/fig_basin'
 
-PRODS = ['BC_G', 'LR_THI', 'BC_LR', 'BC', 'TCA']
-LAB = {'BC_G': 'BC-G (최종산출물)', 'LR_THI': 'LR (목표 티센)',
-       'BC_LR': 'LR (목표 IDW_AWS)', 'BC': 'BC', 'TCA': 'TCA (보정 전)',
-       'THI': '티센'}
-SHORT = {'BC_G': 'BC-G', 'LR_THI': 'LR\n(목표 티센)', 'BC_LR': 'LR\n(목표 AWS)',
-         'BC': 'BC', 'TCA': 'TCA'}
-COL = {'BC_G': '#8E3B46', 'LR_THI': '#0F7B8A', 'BC_LR': '#6C8EBF',
-       'BC': '#D1495B', 'TCA': '#EDAE49'}
+PRODS = ['LR_THI', 'IDW_AWS', 'BC_G']
+LAB = {'LR_THI': 'LR-G (최종산출물)', 'IDW_AWS': 'IDW_AWS (지상관측 보간)',
+       'BC_G': 'BC-G (LightGBM 편향보정)', 'THI': '티센'}
+SHORT = {'LR_THI': 'LR-G', 'IDW_AWS': 'IDW_AWS', 'BC_G': 'BC-G'}
+COL = {'LR_THI': '#C0392B', 'IDW_AWS': '#2E86C1', 'BC_G': '#E08A2E'}
 BASINS = {'논산천상류': '301301', '조종천상류': '101503', '유등천상류': '300903'}
 SPAN = ('2022-01-01', '2025-05-01')   # R7 전국 시계열 구간 (= 평가기간)
 
@@ -100,7 +98,7 @@ def keep(fig, stem: str) -> None:
 
 #%% 자료 읽기 ─────────────────────────────────────────────────────────────
 W, lat, lon, t, A, THI = G.load_all()
-A['LR_THI'] = xr.open_dataset(G.F_OUT)['LR_THI'].values
+A['LR_THI'] = xr.open_dataset(G.F_OUT)['LR_G'].values
 AWS = A['AWS'] if 'AWS' in A else xr.open_dataset(B.NC)['AWS'].values
 BAS = {k: G.to_basin(W, A[k], t) for k in PRODS}
 print('유역', len(W), ' 격자', A['LR_THI'].shape, ' 기간',

@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""티센을 목표로 한 격자별 선형회귀와 전국 평가.
+"""티센을 목표로 한 격자별 선형회귀(LR-G)와 전국 평가.  최종 산출물.
 
-편향보정의 목표자료를 IDW_AWS 대신 티센 유역평균으로 바꾸면 어떻게 되는지
-본다.  격자 한 칸마다 선형회귀를 따로 적합하고, 목표는 그 격자가 속한
-표준유역의 티센 일강수다.  만들어진 격자장을 848개 표준유역으로 면적가중
-집계해 티센 기준으로 BC-G · BC · BC-LR · TCA 와 나란히 평가한다.
+격자 한 칸마다 선형회귀를 따로 적합하고, 목표는 그 격자가 속한 표준유역의
+티센 일강수다.  입력 구성은 LightGBM 편향보정(BC-G)과 같고, 목표만 IDW_AWS
+에서 수문 실무의 유역강우 산정 관행인 티센으로 바뀐다.  만들어진 격자장을
+848개 표준유역으로 면적가중 집계해 티센 기준으로 IDW_AWS · BC-G 와 나란히
+평가한다.
 
-    설명변수  SM2RAIN, ERA5, GPM, TCA      (BC 와 같은 입력, 지상관측 제외)
+    설명변수  SM2RAIN, ERA5, GPM, TCA, AWS(지상관측 격자장)
     목표      격자가 속한 표준유역의 티센 일강수
     적합      2021년
     평가      2022-01-01 ~ 2025-05-01
@@ -15,13 +16,15 @@
 약 100 km2 이고 표준유역 중앙값이 113 km2 라 한 칸이 여러 유역에 걸치지만,
 목표를 하나로 정해야 회귀가 성립한다.
 
-목표와 평가기준이 같은 자료이므로 티센 점수가 좋게 나오기 쉬운 판이다.
-"더 낫다"가 아니라 "제 목표를 얼마나 따라가는가"로 읽고, 전국 확장에서
-실제로 볼 것은 유역별 편차와 관측밀도 의존성이다.
+회귀계수는 지상관측 격자장이 골격을 이루고(전국 중앙값 1.0 부근) 위성·재분석
+네 변수가 잔차를 보정한다.  계수가 1 보다 큰 격자는 지상관측 보간이 유역
+티센보다 낮게 잡는 곳으로, 회귀가 그 차이를 되돌린다.  극한강수(티센
+120 mm/일 이상) 재현비가 BC-G 의 0.71 에서 0.92 로 올라가는 것이 이 구성의
+효과다.
 
 산출
-    KIHS/DATA/LR_THI_grid.nc          격자장 · 격자별 계수 · 적합일수
-    KIHS/DATA/LR_THI_basin_eval.csv   유역별 지표
+    KIHS/DATA/LRG_THI_grid.nc          격자장 · 격자별 계수 · 적합일수
+    KIHS/DATA/LRG_THI_basin_eval.csv   유역별 지표
 
 실행
     python3 lr_thiessen.py            격자장을 만들고 평가·그림까지
@@ -58,21 +61,19 @@ PJ = f'{ROOT}/personal_data/project_KIHS'
 F_THI = f'{PJ}/data/thiessen/THIESSEN_basin_daily.nc'
 WORK = '/Users/kim/Desktop/work/KIHS/DATA'
 F_W = f'{WORK}/basin_cell_weights.pkl'      # 유역×격자 교차면적 (없으면 만든다)
-F_OUT = f'{WORK}/LR_THI_grid.nc'            # 이 스크립트가 만드는 격자장
+F_OUT = f'{WORK}/LRG_THI_grid.nc'           # 이 스크립트가 만드는 격자장
 
 SAVE = None              # 그림 저장 폴더. None 이면 화면에만 띄운다
 FIT_YEAR = '2021'
 EVAL0, EVAL1 = '2022-01-01', '2025-05-01'
-MIN_FIT = 60             # 적합에 쓸 수 있는 날이 이보다 적으면 그 격자는 비운다
+MIN_FIT = 7              # 계수를 풀 수 있는 최소 표본 (설명변수 5 + 절편 + 1)
 MIN_AREA_FRAC = 0.5      # 유역 유효면적이 이보다 작은 날은 결측 (납품 CSV 와 같음)
 
-X_BASE = ['SM2RAIN', 'ERA5', 'GPM', 'TCA']
-PRODS = ['LR_THI', 'BC_G', 'BC', 'BC_LR', 'TCA']
-LAB = {'LR_THI': 'LR (격자별, 목표 티센)', 'BC_G': 'BC-G', 'BC': 'BC',
-       'BC_LR': 'BC_LR (격자별, 목표 AWS)', 'TCA': 'TCA (보정 전)',
-       'THI': '티센'}
-COL = {'LR_THI': '#0F7B8A', 'BC_G': '#8E3B46', 'BC': '#D1495B',
-       'BC_LR': '#6C8EBF', 'TCA': '#EDAE49'}
+X_BASE = ['SM2RAIN', 'ERA5', 'GPM', 'TCA', 'AWS']
+PRODS = ['LR_THI', 'IDW_AWS', 'BC_G']
+LAB = {'LR_THI': 'LR-G (격자별, 목표 티센)', 'IDW_AWS': 'IDW_AWS (지상관측 보간)',
+       'BC_G': 'BC-G', 'THI': '티센'}
+COL = {'LR_THI': '#C0392B', 'IDW_AWS': '#2E86C1', 'BC_G': '#E08A2E'}
 
 
 # ────────────────────────────────────────────────────────────── 자료
@@ -112,10 +113,11 @@ def load_all():
 
     ds = xr.open_dataset(B.NC)
     t = pd.to_datetime(ds.time.values)
-    A = {v: ds[v].values for v in X_BASE + ['BC_LR']}
+    A = {v: ds[v].values for v in X_BASE}
+    A['IDW_AWS'] = A['AWS']
     ds.close()
     d2 = xr.open_dataset(B.NC_BC12)
-    A['BC'], A['BC_G'] = d2['BC_1'].values, d2['BC_2'].values
+    A['BC_G'] = d2['BC_2'].values
     d2.close()
 
     th = xr.open_dataset(F_THI)
@@ -171,7 +173,7 @@ def fit_grid(W, lat, lon, t, A, THI):
 
 def save_grid(P, C, nfit, lat, lon, t):
     ds = xr.Dataset(
-        {'LR_THI': (('time', 'lat', 'lon'), P),
+        {'LR_G': (('time', 'lat', 'lon'), P),
          'coef': (('term', 'lat', 'lon'), C),
          'n_fit': (('lat', 'lon'), nfit)},
         coords={'time': t, 'lat': lat, 'lon': lon,
@@ -340,7 +342,7 @@ def main() -> None:
     print(f'격자 {len(lat)}×{len(lon)} · {len(t)}일 · 유역 {len(W)}개')
 
     if '--no-fit' in sys.argv and os.path.exists(F_OUT):
-        P = xr.open_dataset(F_OUT)['LR_THI'].values
+        P = xr.open_dataset(F_OUT)['LR_G'].values
         print(f'  읽음 {F_OUT}')
     else:
         P, C, nfit, owner = fit_grid(W, lat, lon, t, A, THI)
@@ -348,12 +350,12 @@ def main() -> None:
 
     print('유역 집계 중...', flush=True)
     BAS = {'LR_THI': to_basin(W, P, t)}
-    for k in ('BC_G', 'BC', 'BC_LR', 'TCA'):
+    for k in ('IDW_AWS', 'BC_G'):
         BAS[k] = to_basin(W, A[k], t)
 
     tab = evaluate(BAS, THI)
     print(f'\n■ 티센 기준 전국 평가  {EVAL0} ~ {EVAL1}   '
-          f'유역 {tab["code"].nunique()}개  (다섯 산출물이 다 있는 날만)')
+          f'유역 {tab["code"].nunique()}개  (세 산출물이 다 있는 날만)')
     g = tab.groupby('산출')[['n', 'KGE', 'R', 'RMSE', '누적비', '피크비',
                             '연피크비']]
     print('  ─ 중앙값 ─')
@@ -364,8 +366,8 @@ def main() -> None:
     a = tab.groupby('산출')[['누적', '기준누적', '최대일', '기준최대일']].mean()
     print(a.reindex(PRODS).round(1).to_string())
 
-    tab.to_csv(f'{WORK}/LR_THI_basin_eval.csv', index=False)
-    print(f'\n  저장 {WORK}/LR_THI_basin_eval.csv')
+    tab.to_csv(f'{WORK}/LRG_THI_basin_eval.csv', index=False)
+    print(f'\n  저장 {WORK}/LRG_THI_basin_eval.csv')
     figures(tab, W)
 
 

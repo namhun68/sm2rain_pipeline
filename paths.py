@@ -32,6 +32,7 @@ PJ = CPU / 'personal_data/project_KIHS'   # 파이프라인 중간·최종 격�
 PRECIP = PJ / 'result/ASCAT/precipitation'
 SM2R = PJ / 'result/SM2RAIN'
 THIES = PJ / 'data/thiessen'              # 티센 산출물 (기존 방식 비교군)
+SHAPE = PJ / 'data/shape'                 # 국가 표준유역도
 
 # ──────────────────────────────────────────────────────────────────────────
 # 단계별로 필요한 것 —  (경로, 설명, 필수 여부)
@@ -76,7 +77,7 @@ NEEDS: dict[str, list[tuple[Path, str, bool]]] = {
     '05_export': [
         (PRECIP / 'BC12_fields_2021fit.nc', 'BC · BC-G 격자장', True),
         (PRECIP / 'BC_LR_AWS_KST.nc', '참고 산출물 격자', True),
-        (DATA / 'std_basin_850/std_basin_850.shp', '국가 표준유역도 850', True),
+        (SHAPE / 'std_basin_850.shp', '국가 표준유역도 850', True),
         (DATA / 'AWS', '기상청 시자료 (티센 산정용)', True),
         (FINAL, '납품 CSV (출력)', False),
         (THIES / 'THIESSEN_basin_daily.nc', '티센 유역 일강수 (출력)', False),
@@ -84,7 +85,7 @@ NEEDS: dict[str, list[tuple[Path, str, bool]]] = {
     'analysis': [
         (FINAL / '02_표준유역/BCG_basin_daily.csv', '유역 일강수 (BC-G)', True),
         (FINAL / '03_참고자료/ASOS_basin_daily.csv', '유역 일강수 (기준 ASOS)', True),
-        (DATA / 'std_basin_850/std_basin_850.shp', '국가 표준유역도 850', True),
+        (SHAPE / 'std_basin_850.shp', '국가 표준유역도 850', True),
         (DATA / 'basin_eval_cache.pkl', '유역 추출 캐시', False),
         (DATA / 'national_eval_cache.pkl', '전국 평가 캐시', False),
         (DATA / 'thiessen_aws.pkl', '티센 가중치·시계열 (3개 유역)', False),
@@ -92,7 +93,7 @@ NEEDS: dict[str, list[tuple[Path, str, bool]]] = {
         (PRECIP / 'BC12_fields_2021fit.nc', 'BC · BC-G 격자장', True),
         (PRECIP / 'BC_LR_AWS_KST.nc', 'SM2RAIN·GPM·ERA5·TCA 격자', True),
         (DATA / 'basin_cell_weights.pkl', '유역×격자 교차면적 (없으면 만든다)', False),
-        (DATA / 'LR_THI_grid.nc', '티센 목표 회귀 격자장 (출력)', False),
+        (DATA / 'LRG_THI_grid.nc', '최종 산출물 LR-G 격자장 (출력)', False),
     ],
     'figures': [
         (DATA / 'basin_eval_cache.pkl', '유역 캐시 (map·series·sums)', True),
@@ -101,7 +102,7 @@ NEEDS: dict[str, list[tuple[Path, str, bool]]] = {
         (PRECIP / 'BC12_fields_2021fit.nc', 'BC · BC-G 격자 (grid·graph)', False),
         (PJ / 'result/ASCAT/precipitation/BC_LR_AWS_KST.nc',
          'IDW_AWS · GPM 격자 (grid·graph)', False),
-        (DATA / 'LR_THI_grid.nc', '티센 목표 회귀 격자장 (report_lr)', False),
+        (DATA / 'LRG_THI_grid.nc', '최종 산출물 LR-G 격자장 (report_lr)', False),
     ],
 }
 

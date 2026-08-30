@@ -27,7 +27,12 @@ import pandas as pd
 ROOT = '/Users/kim/Desktop/work/KIHS/DATA/최종산출물'
 OUT_DIR = '/Users/kim/Desktop/work/KIHS/fig_basin'
 CACHE = '/Users/kim/Desktop/work/KIHS/DATA/national_eval_cache.pkl'
-SHP = '/Users/kim/Desktop/work/KIHS/DATA/std_basin_850/std_basin_850'
+#  표준유역도.  서버 자료폴더에 두고, 없으면 로컬 사본을 쓴다
+SHP = next((p for p in (
+    '/Users/kim/cpuserver_data/personal_data/project_KIHS/data/shape/std_basin_850',
+    '/Users/kim/Desktop/work/KIHS/DATA/std_basin_850/std_basin_850')
+    if os.path.exists(p + '.shp')),
+    '/Users/kim/cpuserver_data/personal_data/project_KIHS/data/shape/std_basin_850')
 
 START = '2022-01-01'
 # 대권역코드는 한강권 10~13, 낙동강권 20~25 처럼 십의 자리가 권역을 뜻한다.

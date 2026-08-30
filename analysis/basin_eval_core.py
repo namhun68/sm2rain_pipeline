@@ -31,7 +31,12 @@ from shapely.geometry import Polygon, box
 from shapely.ops import unary_union
 
 # ------------------------------------------------------------------ 설정
-SHP = '/Users/kim/Desktop/work/KIHS/DATA/std_basin_850/std_basin_850'
+#  표준유역도.  서버 자료폴더에 두고, 없으면 로컬 사본을 쓴다
+SHP = next((p for p in (
+    '/Users/kim/cpuserver_data/personal_data/project_KIHS/data/shape/std_basin_850',
+    '/Users/kim/Desktop/work/KIHS/DATA/std_basin_850/std_basin_850')
+    if os.path.exists(p + '.shp')),
+    '/Users/kim/cpuserver_data/personal_data/project_KIHS/data/shape/std_basin_850')
 _P = '/Users/kim/cpuserver_data/personal_data/project_KIHS/result/ASCAT/precipitation/'
 NC = _P + 'BC_LR_AWS_KST.nc'          # SM2RAIN/GPM/ERA5/TCA/AWS/ASOS/BC_LR
 
